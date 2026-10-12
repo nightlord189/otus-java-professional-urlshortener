@@ -1,0 +1,1 @@
+rootProject.name = "otus-java-professional-urlshortener"
