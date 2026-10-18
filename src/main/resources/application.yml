@@ -21,3 +21,11 @@ management:
     web:
       exposure:
         include: health,info
+
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+    ttl: ${APP_JWT_TTL:1h}
+  admin:
+    email: ${APP_ADMIN_EMAIL:admin@example.com}
+    password: ${APP_ADMIN_PASSWORD:admin123}
