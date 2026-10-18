@@ -25,6 +25,9 @@ and send it as `Authorization: Bearer <token>`.
 An admin user is created on first start from `APP_ADMIN_EMAIL` / `APP_ADMIN_PASSWORD`
 (defaults: `admin@example.com` / `admin123`).
 
+Create a short link with `POST /api/v1/links` (`{"originalUrl": "https://example.com"}`),
+then open `http://localhost:8080/<code>` to be redirected.
+
 ## Test
 
 ```bash

@@ -29,3 +29,6 @@ app:
   admin:
     email: ${APP_ADMIN_EMAIL:admin@example.com}
     password: ${APP_ADMIN_PASSWORD:admin123}
+  links:
+    base-url: ${APP_BASE_URL:http://localhost:8080}
+    code-length: 7
