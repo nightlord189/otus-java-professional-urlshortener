@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: urlshortener
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/urlshortener}
+    username: ${DB_USERNAME:urlshortener}
+    password: ${DB_PASSWORD:urlshortener}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  docker:
+    compose:
+      lifecycle-management: start-only
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
