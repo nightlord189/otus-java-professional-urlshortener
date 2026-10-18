@@ -15,6 +15,7 @@ public class LinkMapper {
     public LinkResponse toResponse(Link link) {
         return new LinkResponse(
                 link.getId(),
+                link.getOwner().getId(),
                 link.getShortCode(),
                 baseUrl + "/" + link.getShortCode(),
                 link.getOriginalUrl(),

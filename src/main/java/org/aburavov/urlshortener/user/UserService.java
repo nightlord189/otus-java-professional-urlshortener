@@ -7,6 +7,9 @@ import java.util.regex.Pattern;
 import org.aburavov.urlshortener.common.BadRequestException;
 import org.aburavov.urlshortener.common.ConflictException;
 import org.aburavov.urlshortener.common.NotFoundException;
+import org.aburavov.urlshortener.common.Paging;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +51,36 @@ public class UserService {
     @Transactional(readOnly = true)
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(normalizeEmail(email));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<User> listAll(int page, int size) {
+        return userRepository.findAll(Paging.of(page, size, Sort.by("id")));
+    }
+
+    @Transactional(readOnly = true)
+    public long count() {
+        return userRepository.count();
+    }
+
+    @Transactional
+    public User block(long id) {
+        User user = getById(id);
+        if (user.getRole() == UserRole.ADMIN) {
+            throw new ConflictException("Cannot block an administrator");
+        }
+        user.setStatus(UserStatus.BLOCKED);
+        return user;
+    }
+
+    @Transactional
+    public User unblock(long id) {
+        User user = getById(id);
+        if (user.getStatus() != UserStatus.BLOCKED) {
+            throw new ConflictException("User is not blocked");
+        }
+        user.setStatus(UserStatus.ACTIVE);
+        return user;
     }
 
     private static void validateEmail(String email) {

@@ -49,6 +49,6 @@ class UserApiIntegrationTest extends AbstractIntegrationTest {
 
         mockMvc.perform(get("/api/v1/admin/users")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
     }
 }

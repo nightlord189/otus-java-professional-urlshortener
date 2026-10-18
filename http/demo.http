@@ -1,0 +1,76 @@
+### Register a user
+POST {{baseUrl}}/api/v1/auth/register
+Content-Type: application/json
+
+{"email": "demo@example.com", "password": "password123"}
+
+### Log in
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{"email": "demo@example.com", "password": "password123"}
+
+> {% client.global.set("token", response.body.accessToken); %}
+
+### Who am I
+GET {{baseUrl}}/api/v1/users/me
+Authorization: Bearer {{token}}
+
+### Create a short link
+POST {{baseUrl}}/api/v1/links
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"originalUrl": "https://spring.io/projects/spring-boot"}
+
+> {% client.global.set("linkId", response.body.id); client.global.set("code", response.body.code); %}
+
+### Create a link with a custom alias and expiry
+POST {{baseUrl}}/api/v1/links
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"originalUrl": "https://docs.spring.io/spring-boot/", "alias": "boot-docs", "expiresAt": "2030-01-01T00:00:00Z"}
+
+### Follow the short link (302)
+GET {{baseUrl}}/{{code}}
+Referer: https://t.me/
+
+### My links
+GET {{baseUrl}}/api/v1/links?page=0&size=20
+Authorization: Bearer {{token}}
+
+### Click statistics
+GET {{baseUrl}}/api/v1/links/{{linkId}}/stats
+Authorization: Bearer {{token}}
+
+### Disable the link (redirect answers 410 afterwards)
+PATCH {{baseUrl}}/api/v1/links/{{linkId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"status": "DISABLED"}
+
+### Delete the link
+DELETE {{baseUrl}}/api/v1/links/{{linkId}}
+Authorization: Bearer {{token}}
+
+### Admin: log in
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{"email": "{{adminEmail}}", "password": "{{adminPassword}}"}
+
+> {% client.global.set("adminToken", response.body.accessToken); %}
+
+### Admin: all links
+GET {{baseUrl}}/api/v1/admin/links?page=0&size=20
+Authorization: Bearer {{adminToken}}
+
+### Admin: users
+GET {{baseUrl}}/api/v1/admin/users
+Authorization: Bearer {{adminToken}}
+
+### Admin: global statistics
+GET {{baseUrl}}/api/v1/admin/stats
+Authorization: Bearer {{adminToken}}

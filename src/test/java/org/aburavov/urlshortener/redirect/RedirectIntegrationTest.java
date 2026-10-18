@@ -19,6 +19,7 @@ import org.aburavov.urlshortener.user.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
@@ -30,6 +31,8 @@ class RedirectIntegrationTest extends AbstractIntegrationTest {
     private UserService userService;
     @Autowired
     private CacheManager cacheManager;
+    @Autowired
+    private MeterRegistry meterRegistry;
 
     @Test
     void redirectsToOriginalUrl() throws Exception {
@@ -92,6 +95,18 @@ class RedirectIntegrationTest extends AbstractIntegrationTest {
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/" + code)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void redirectsAreCounted() throws Exception {
+        String token = registerAndLogin("redirect-6@example.com", "password123");
+        String code = JsonPath.read(createLink(token, "{\"originalUrl\": \"https://example.com\"}"), "$.code");
+        double before = meterRegistry.counter("shortener.redirects", "outcome", "found").count();
+
+        mockMvc.perform(get("/" + code)).andExpect(status().isFound());
+        mockMvc.perform(get("/" + code)).andExpect(status().isFound());
+
+        assertThat(meterRegistry.counter("shortener.redirects", "outcome", "found").count()).isEqualTo(before + 2);
     }
 
     @Test

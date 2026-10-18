@@ -5,6 +5,7 @@ import org.aburavov.urlshortener.link.LinkStatus;
 
 public record LinkResponse(
         Long id,
+        Long ownerId,
         String code,
         String shortUrl,
         String originalUrl,

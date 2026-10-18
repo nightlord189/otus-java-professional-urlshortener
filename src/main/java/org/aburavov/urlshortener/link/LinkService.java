@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import org.aburavov.urlshortener.common.BadRequestException;
 import org.aburavov.urlshortener.common.ConflictException;
 import org.aburavov.urlshortener.common.NotFoundException;
+import org.aburavov.urlshortener.common.Paging;
 import org.aburavov.urlshortener.config.CacheConfig;
 import org.aburavov.urlshortener.link.dto.CreateLinkRequest;
 import org.aburavov.urlshortener.link.dto.UpdateLinkRequest;
@@ -16,7 +17,6 @@ import org.aburavov.urlshortener.user.User;
 import org.aburavov.urlshortener.user.UserService;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +29,7 @@ public class LinkService {
             "api", "actuator", "admin", "swagger-ui", "v3", "login", "register", "health", "static", "error");
     private static final int URL_MAX_LENGTH = 2048;
     private static final int CODE_GENERATION_ATTEMPTS = 3;
-    private static final int PAGE_SIZE_MAX = 100;
+    private static final Sort NEWEST_FIRST = Sort.by(Sort.Direction.DESC, "createdAt");
 
     private final LinkRepository linkRepository;
     private final UserService userService;
@@ -59,14 +59,31 @@ public class LinkService {
 
     @Transactional(readOnly = true)
     public Page<Link> listByOwner(long ownerId, LinkStatus status, int page, int size) {
-        if (page < 0 || size < 1 || size > PAGE_SIZE_MAX) {
-            throw new BadRequestException("Page must be >= 0 and size between 1 and " + PAGE_SIZE_MAX);
-        }
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         if (status == null) {
-            return linkRepository.findByOwnerIdAndStatusNot(ownerId, LinkStatus.DELETED, pageRequest);
+            return linkRepository.findByOwnerIdAndStatusNot(ownerId, LinkStatus.DELETED, Paging.of(page, size, NEWEST_FIRST));
         }
-        return linkRepository.findByOwnerIdAndStatus(ownerId, status, pageRequest);
+        return linkRepository.findByOwnerIdAndStatus(ownerId, status, Paging.of(page, size, NEWEST_FIRST));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Link> listAll(Long ownerId, LinkStatus status, int page, int size) {
+        return linkRepository.findAllFiltered(ownerId, status, Paging.of(page, size, NEWEST_FIRST));
+    }
+
+    @Transactional(readOnly = true)
+    public Link getById(long linkId) {
+        return linkRepository.findById(linkId)
+                .orElseThrow(() -> new NotFoundException("Link not found"));
+    }
+
+    @Transactional(readOnly = true)
+    public long countNotDeleted() {
+        return linkRepository.countByStatusNot(LinkStatus.DELETED);
+    }
+
+    @Transactional(readOnly = true)
+    public long countActive() {
+        return linkRepository.countByStatus(LinkStatus.ACTIVE);
     }
 
     @Transactional(readOnly = true)
@@ -109,6 +126,28 @@ public class LinkService {
         Link link = getOwned(ownerId, linkId);
         link.setStatus(LinkStatus.DELETED);
         evictFromCache(link);
+    }
+
+    @Transactional
+    public Link block(long linkId) {
+        Link link = getById(linkId);
+        if (link.getStatus() == LinkStatus.DELETED) {
+            throw new ConflictException("Link is deleted");
+        }
+        link.setStatus(LinkStatus.BLOCKED);
+        evictFromCache(link);
+        return link;
+    }
+
+    @Transactional
+    public Link unblock(long linkId) {
+        Link link = getById(linkId);
+        if (link.getStatus() != LinkStatus.BLOCKED) {
+            throw new ConflictException("Link is not blocked");
+        }
+        link.setStatus(LinkStatus.ACTIVE);
+        evictFromCache(link);
+        return link;
     }
 
     private String generateFreeCode() {

@@ -174,6 +174,36 @@ class LinkApiIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void unknownLinkReturns404() throws Exception {
+        String token = registerAndLogin("link-owner-11@example.com", "password123");
+
+        mockMvc.perform(get("/api/v1/links/999999")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("Link not found"));
+    }
+
+    @Test
+    void malformedJsonReturns400() throws Exception {
+        String token = registerAndLogin("link-owner-12@example.com", "password123");
+
+        mockMvc.perform(post("/api/v1/links")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{not json"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void tooLargePageSizeReturns400() throws Exception {
+        String token = registerAndLogin("link-owner-13@example.com", "password123");
+
+        mockMvc.perform(get("/api/v1/links").param("size", "1000")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void deleteHidesLink() throws Exception {
         String token = registerAndLogin("link-owner-10@example.com", "password123");
         int linkId = JsonPath.read(createLink(token, "{\"originalUrl\": \"https://example.com\"}"), "$.id");

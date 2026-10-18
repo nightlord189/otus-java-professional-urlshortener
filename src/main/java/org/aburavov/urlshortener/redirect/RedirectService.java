@@ -22,6 +22,6 @@ public class RedirectService {
         Link link = linkRepository.findByShortCode(code)
                 .filter(found -> found.getStatus() != LinkStatus.DELETED)
                 .orElseThrow(() -> new NotFoundException("Link not found"));
-        return new ResolvedLink(link.getOriginalUrl(), link.getStatus(), link.getExpiresAt());
+        return new ResolvedLink(link.getId(), link.getOriginalUrl(), link.getStatus(), link.getExpiresAt());
     }
 }

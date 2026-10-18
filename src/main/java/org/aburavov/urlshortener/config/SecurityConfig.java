@@ -33,6 +33,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/{code:[A-Za-z0-9_-]{4,32}}").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
