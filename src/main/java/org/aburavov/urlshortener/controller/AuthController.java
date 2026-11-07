@@ -4,6 +4,7 @@ import org.aburavov.urlshortener.dto.LoginRequest;
 import org.aburavov.urlshortener.dto.RegisterRequest;
 import org.aburavov.urlshortener.dto.TokenResponse;
 import org.aburavov.urlshortener.dto.UserResponse;
+import org.aburavov.urlshortener.model.User;
 import org.aburavov.urlshortener.model.UserRole;
 import org.aburavov.urlshortener.service.AuthService;
 import org.aburavov.urlshortener.service.UserService;
@@ -29,7 +30,7 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse register(@RequestBody RegisterRequest request) {
-        var user = userService.create(request.email(), request.password(), UserRole.USER);
+        User user = userService.create(request.email(), request.password(), UserRole.USER);
         return UserResponse.from(user);
     }
 

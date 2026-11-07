@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.aburavov.urlshortener.dto.CreateLinkRequest;
 import org.aburavov.urlshortener.dto.LinkResponse;
+import org.aburavov.urlshortener.dto.ResolvedLink;
 import org.aburavov.urlshortener.dto.UpdateLinkRequest;
 import org.aburavov.urlshortener.model.Click;
 import org.aburavov.urlshortener.model.LinkStatus;
@@ -75,7 +76,7 @@ public class LinkController {
     @GetMapping("/{code}")
     public void redirect(@PathVariable String code, HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        var link = linkService.resolve(code);
+        ResolvedLink link = linkService.resolve(code);
         if (!link.isActive()) {
             throw new ResponseStatusException(HttpStatus.GONE, "Link is disabled or expired");
         }

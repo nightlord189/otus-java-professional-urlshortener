@@ -1,6 +1,3 @@
-// Runs the main API scenario against a running app.
-// Usage: node integration-test/api-test.js [baseUrl]   (default http://localhost:8080)
-
 const baseUrl = process.argv[2] || "http://localhost:8080";
 
 let passed = 0;
@@ -30,7 +27,6 @@ async function api(method, path, body, token) {
     try {
         json = await res.json();
     } catch (e) {
-        // no body (204, redirects)
     }
     return {status: res.status, body: json, location: res.headers.get("location")};
 }

@@ -18,7 +18,7 @@ create table links (
     updated_at timestamptz not null default now()
 );
 
-create index on links (owner_id, created_at desc);
+create index idx_links_owner_created on links (owner_id, created_at desc);
 
 create table clicks (
     id bigserial primary key,
@@ -29,4 +29,4 @@ create table clicks (
     ip varchar(45)
 );
 
-create index on clicks (link_id, clicked_at);
+create index idx_clicks_link_clicked on clicks (link_id, clicked_at);

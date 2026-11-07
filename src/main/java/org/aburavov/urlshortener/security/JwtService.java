@@ -1,5 +1,6 @@
 package org.aburavov.urlshortener.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.aburavov.urlshortener.model.User;
@@ -19,7 +20,7 @@ public class JwtService {
     private int ttlSeconds;
 
     public String createToken(User user) {
-        var now = new Date();
+        Date now = new Date();
         return Jwts.builder()
                 .subject(user.getEmail())
                 .claim("role", user.getRole().name())
@@ -29,9 +30,8 @@ public class JwtService {
                 .compact();
     }
 
-    // throws JwtException if the token is broken or expired
     public String getEmail(String token) {
-        var claims = Jwts.parser().verifyWith(key()).build().parseSignedClaims(token).getPayload();
+        Claims claims = Jwts.parser().verifyWith(key()).build().parseSignedClaims(token).getPayload();
         return claims.getSubject();
     }
 

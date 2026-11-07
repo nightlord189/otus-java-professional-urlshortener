@@ -11,8 +11,8 @@ class UserControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldReturnCurrentUser() throws Exception {
-        var email = randomEmail();
-        var token = registerAndLogin(email);
+        String email = randomEmail();
+        String token = registerAndLogin(email);
 
         mockMvc.perform(get("/api/v1/users/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())

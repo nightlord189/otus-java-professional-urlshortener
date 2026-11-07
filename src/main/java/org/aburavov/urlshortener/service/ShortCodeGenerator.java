@@ -11,7 +11,7 @@ public class ShortCodeGenerator {
     private final Random random = new Random();
 
     public String generate() {
-        var code = new StringBuilder();
+        StringBuilder code = new StringBuilder();
         for (int i = 0; i < 7; i++) {
             code.append(ALPHABET.charAt(random.nextInt(ALPHABET.length())));
         }

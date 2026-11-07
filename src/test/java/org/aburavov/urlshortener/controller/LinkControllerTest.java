@@ -3,6 +3,7 @@ package org.aburavov.urlshortener.controller;
 import com.jayway.jsonpath.JsonPath;
 import org.aburavov.urlshortener.BaseIntegrationTest;
 import org.aburavov.urlshortener.model.Link;
+import org.aburavov.urlshortener.model.User;
 import org.aburavov.urlshortener.model.UserRole;
 import org.aburavov.urlshortener.repository.LinkRepository;
 import org.aburavov.urlshortener.service.UserService;
@@ -29,7 +30,7 @@ class LinkControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldCreateShortLink() throws Exception {
-        var token = registerAndLogin(randomEmail());
+        String token = registerAndLogin(randomEmail());
 
         mockMvc.perform(post("/api/v1/links")
                         .header("Authorization", "Bearer " + token)
@@ -46,8 +47,8 @@ class LinkControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldCreateLinkWithAlias() throws Exception {
-        var token = registerAndLogin(randomEmail());
-        var alias = "page" + System.nanoTime();
+        String token = registerAndLogin(randomEmail());
+        String alias = "page" + System.nanoTime();
 
         mockMvc.perform(post("/api/v1/links")
                         .header("Authorization", "Bearer " + token)
@@ -66,7 +67,7 @@ class LinkControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldRejectBadUrlAndPastExpiry() throws Exception {
-        var token = registerAndLogin(randomEmail());
+        String token = registerAndLogin(randomEmail());
 
         mockMvc.perform(post("/api/v1/links")
                         .header("Authorization", "Bearer " + token)
@@ -90,13 +91,13 @@ class LinkControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldListOnlyOwnLinks() throws Exception {
-        var alice = registerAndLogin(randomEmail());
-        var bob = registerAndLogin(randomEmail());
-        createLink(alice, "{\"originalUrl\": \"https://example.com/a1\"}");
-        createLink(alice, "{\"originalUrl\": \"https://example.com/a2\"}");
-        createLink(bob, "{\"originalUrl\": \"https://example.com/b1\"}");
+        String serik = registerAndLogin(randomEmail());
+        String tatyana = registerAndLogin(randomEmail());
+        createLink(serik, "{\"originalUrl\": \"https://example.com/a1\"}");
+        createLink(serik, "{\"originalUrl\": \"https://example.com/a2\"}");
+        createLink(tatyana, "{\"originalUrl\": \"https://example.com/b1\"}");
 
-        mockMvc.perform(get("/api/v1/links").header("Authorization", "Bearer " + alice))
+        mockMvc.perform(get("/api/v1/links").header("Authorization", "Bearer " + serik))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.page.totalElements").value(2))
                 .andExpect(jsonPath("$.content[0].originalUrl").value("https://example.com/a2"))
@@ -105,21 +106,21 @@ class LinkControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldNotShowOtherUsersLink() throws Exception {
-        var alice = registerAndLogin(randomEmail());
-        var bob = registerAndLogin(randomEmail());
-        int linkId = JsonPath.read(createLink(alice, "{\"originalUrl\": \"https://example.com\"}"), "$.id");
+        String serik = registerAndLogin(randomEmail());
+        String tatyana = registerAndLogin(randomEmail());
+        int linkId = JsonPath.read(createLink(serik, "{\"originalUrl\": \"https://example.com\"}"), "$.id");
 
-        mockMvc.perform(get("/api/v1/links/" + linkId).header("Authorization", "Bearer " + bob))
+        mockMvc.perform(get("/api/v1/links/" + linkId).header("Authorization", "Bearer " + tatyana))
                 .andExpect(status().isNotFound());
 
-        mockMvc.perform(get("/api/v1/links/" + linkId).header("Authorization", "Bearer " + alice))
+        mockMvc.perform(get("/api/v1/links/" + linkId).header("Authorization", "Bearer " + serik))
                 .andExpect(status().isOk());
     }
 
     @Test
     void shouldUpdateStatusAndExpiry() throws Exception {
-        var token = registerAndLogin(randomEmail());
-        var expiresAt = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.SECONDS).toString();
+        String token = registerAndLogin(randomEmail());
+        String expiresAt = Instant.now().plus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.SECONDS).toString();
         int linkId = JsonPath.read(createLink(token,
                 "{\"originalUrl\": \"https://example.com\", \"expiresAt\": \"" + expiresAt + "\"}"), "$.id");
 
@@ -137,7 +138,6 @@ class LinkControllerTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.status").value("DISABLED"))
                 .andExpect(jsonPath("$.expiresAt").value(nullValue()));
 
-        // BLOCKED can be set only by admin
         mockMvc.perform(patch("/api/v1/links/" + linkId)
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -147,7 +147,7 @@ class LinkControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldDeleteLink() throws Exception {
-        var token = registerAndLogin(randomEmail());
+        String token = registerAndLogin(randomEmail());
         int linkId = JsonPath.read(createLink(token, "{\"originalUrl\": \"https://example.com\"}"), "$.id");
 
         mockMvc.perform(delete("/api/v1/links/" + linkId).header("Authorization", "Bearer " + token))
@@ -164,7 +164,7 @@ class LinkControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldRedirectToOriginalUrl() throws Exception {
-        var token = registerAndLogin(randomEmail());
+        String token = registerAndLogin(randomEmail());
         String code = JsonPath.read(createLink(token, "{\"originalUrl\": \"https://example.com/target?x=1\"}"), "$.code");
 
         mockMvc.perform(get("/" + code))
@@ -180,8 +180,8 @@ class LinkControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldStopRedirectingAfterDisableAndDelete() throws Exception {
-        var token = registerAndLogin(randomEmail());
-        var body = createLink(token, "{\"originalUrl\": \"https://example.com\"}");
+        String token = registerAndLogin(randomEmail());
+        String body = createLink(token, "{\"originalUrl\": \"https://example.com\"}");
         String code = JsonPath.read(body, "$.code");
         int linkId = JsonPath.read(body, "$.id");
 
@@ -201,8 +201,8 @@ class LinkControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldReturn410ForExpiredLink() throws Exception {
-        var owner = userService.create(randomEmail(), "password123", UserRole.USER);
-        var code = "exp" + System.nanoTime();
+        User owner = userService.create(randomEmail(), "password123", UserRole.USER);
+        String code = "exp" + System.nanoTime();
         linkRepository.save(new Link(code, "https://example.com", owner, Instant.now().minusSeconds(60)));
 
         mockMvc.perform(get("/" + code))

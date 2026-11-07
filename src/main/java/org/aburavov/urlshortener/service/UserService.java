@@ -43,7 +43,7 @@ public class UserService implements UserDetailsService {
         if (userRepository.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already registered");
         }
-        var user = userRepository.save(new User(email, passwordEncoder.encode(password), role));
+        User user = userRepository.save(new User(email, passwordEncoder.encode(password), role));
         log.info("created user {} with role {}", user.getEmail(), role);
         return user;
     }
@@ -65,7 +65,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public User block(long id) {
-        var user = getById(id);
+        User user = getById(id);
         if (user.getRole() == UserRole.ADMIN) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Admin cannot be blocked");
         }
@@ -75,7 +75,7 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public User unblock(long id) {
-        var user = getById(id);
+        User user = getById(id);
         if (user.getStatus() != UserStatus.BLOCKED) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "User is not blocked");
         }

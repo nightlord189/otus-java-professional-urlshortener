@@ -1,6 +1,7 @@
 package org.aburavov.urlshortener.service;
 
 import org.aburavov.urlshortener.dto.TokenResponse;
+import org.aburavov.urlshortener.model.User;
 import org.aburavov.urlshortener.model.UserStatus;
 import org.aburavov.urlshortener.repository.UserRepository;
 import org.aburavov.urlshortener.security.JwtService;
@@ -29,7 +30,7 @@ public class AuthService {
         if (email == null || password == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email and password are required");
         }
-        var user = userRepository.findByEmail(email.trim().toLowerCase())
+        User user = userRepository.findByEmail(email.trim().toLowerCase())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong email or password"));
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong email or password");

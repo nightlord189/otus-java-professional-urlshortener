@@ -19,7 +19,6 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected MockMvc mockMvc;
 
-    // tests share one database, so every test registers its own user
     protected String randomEmail() {
         return "user" + System.nanoTime() + "@test.com";
     }
@@ -33,7 +32,7 @@ public abstract class BaseIntegrationTest {
     }
 
     protected String login(String email, String password) throws Exception {
-        var body = mockMvc.perform(post("/api/v1/auth/login")
+        String body = mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(credentials(email, password)))
                 .andExpect(status().isOk())

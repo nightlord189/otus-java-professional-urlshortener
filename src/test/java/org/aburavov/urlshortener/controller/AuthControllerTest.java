@@ -12,7 +12,7 @@ class AuthControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldRegisterUser() throws Exception {
-        var email = randomEmail();
+        String email = randomEmail();
 
         mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -26,7 +26,7 @@ class AuthControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldNotRegisterSameEmailTwice() throws Exception {
-        var email = randomEmail();
+        String email = randomEmail();
         registerAndLogin(email);
 
         mockMvc.perform(post("/api/v1/auth/register")
@@ -53,7 +53,7 @@ class AuthControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldLoginWithCorrectPasswordOnly() throws Exception {
-        var email = randomEmail();
+        String email = randomEmail();
         registerAndLogin(email);
 
         mockMvc.perform(post("/api/v1/auth/login")

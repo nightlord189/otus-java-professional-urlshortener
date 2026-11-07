@@ -5,6 +5,7 @@ import org.aburavov.urlshortener.dto.ResolvedLink;
 import org.aburavov.urlshortener.dto.UpdateLinkRequest;
 import org.aburavov.urlshortener.model.Link;
 import org.aburavov.urlshortener.model.LinkStatus;
+import org.aburavov.urlshortener.model.User;
 import org.aburavov.urlshortener.repository.LinkRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,9 +43,9 @@ public class LinkService {
     }
 
     public Link create(long ownerId, CreateLinkRequest request) {
-        var url = checkUrl(request.originalUrl());
+        String url = checkUrl(request.originalUrl());
         checkExpiresAt(request.expiresAt());
-        var code = request.alias();
+        String code = request.alias();
         if (code == null || code.isBlank()) {
             code = codeGenerator.generate();
             while (linkRepository.existsByShortCode(code)) {
@@ -53,15 +54,15 @@ public class LinkService {
         } else {
             checkAlias(code);
         }
-        var owner = userService.getById(ownerId);
-        var link = linkRepository.save(new Link(code, url, owner, request.expiresAt()));
+        User owner = userService.getById(ownerId);
+        Link link = linkRepository.save(new Link(code, url, owner, request.expiresAt()));
         log.info("created link {} -> {}", code, url);
         return link;
     }
 
     @Cacheable("links")
     public ResolvedLink resolve(String code) {
-        var link = linkRepository.findByShortCode(code)
+        Link link = linkRepository.findByShortCode(code)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Link not found"));
         if (link.getStatus() == LinkStatus.DELETED) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Link not found");
@@ -94,9 +95,8 @@ public class LinkService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Link not found"));
     }
 
-    // user sees only his own links, deleted ones look like they never existed
     public Link getOwned(long ownerId, long id) {
-        var link = getById(id);
+        Link link = getById(id);
         if (link.getOwner().getId() != ownerId || link.getStatus() == LinkStatus.DELETED) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Link not found");
         }
@@ -105,7 +105,7 @@ public class LinkService {
 
     @Transactional
     public Link update(long ownerId, long id, UpdateLinkRequest request) {
-        var link = getOwned(ownerId, id);
+        Link link = getOwned(ownerId, id);
         if (request.status() != null) {
             if (request.status() != LinkStatus.ACTIVE && request.status() != LinkStatus.DISABLED) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status must be ACTIVE or DISABLED");
@@ -125,7 +125,7 @@ public class LinkService {
 
     @Transactional
     public Link clearExpiry(long ownerId, long id) {
-        var link = getOwned(ownerId, id);
+        Link link = getOwned(ownerId, id);
         link.setExpiresAt(null);
         evict(link);
         return link;
@@ -133,7 +133,7 @@ public class LinkService {
 
     @Transactional
     public void delete(long ownerId, long id) {
-        var link = getOwned(ownerId, id);
+        Link link = getOwned(ownerId, id);
         link.setStatus(LinkStatus.DELETED);
         evict(link);
         log.info("deleted link {}", link.getShortCode());
@@ -141,7 +141,7 @@ public class LinkService {
 
     @Transactional
     public Link block(long id) {
-        var link = getById(id);
+        Link link = getById(id);
         if (link.getStatus() == LinkStatus.DELETED) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Link is deleted");
         }
@@ -152,7 +152,7 @@ public class LinkService {
 
     @Transactional
     public Link unblock(long id) {
-        var link = getById(id);
+        Link link = getById(id);
         if (link.getStatus() != LinkStatus.BLOCKED) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Link is not blocked");
         }
@@ -174,7 +174,7 @@ public class LinkService {
         if (originalUrl == null || originalUrl.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL is required");
         }
-        var url = originalUrl.trim();
+        String url = originalUrl.trim();
         if (url.length() > 2048) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "URL is too long");
         }

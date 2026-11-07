@@ -15,7 +15,7 @@ class AdminControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldForbidAdminApiForUsers() throws Exception {
-        var token = registerAndLogin(randomEmail());
+        String token = registerAndLogin(randomEmail());
 
         mockMvc.perform(get("/api/v1/admin/links").header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
@@ -27,8 +27,8 @@ class AdminControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldListLinksByOwner() throws Exception {
-        var user = registerAndLogin(randomEmail());
-        var admin = adminLogin();
+        String user = registerAndLogin(randomEmail());
+        String admin = adminLogin();
         int userId = currentUserId(user);
         createLink(user, "{\"originalUrl\": \"https://example.com/1\"}");
         createLink(user, "{\"originalUrl\": \"https://example.com/2\"}");
@@ -50,9 +50,9 @@ class AdminControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldBlockAndUnblockLink() throws Exception {
-        var user = registerAndLogin(randomEmail());
-        var admin = adminLogin();
-        var body = createLink(user, "{\"originalUrl\": \"https://example.com\"}");
+        String user = registerAndLogin(randomEmail());
+        String admin = adminLogin();
+        String body = createLink(user, "{\"originalUrl\": \"https://example.com\"}");
         String code = JsonPath.read(body, "$.code");
         int linkId = JsonPath.read(body, "$.id");
 
@@ -75,16 +75,15 @@ class AdminControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldBlockUser() throws Exception {
-        var email = randomEmail();
-        var user = registerAndLogin(email);
-        var admin = adminLogin();
+        String email = randomEmail();
+        String user = registerAndLogin(email);
+        String admin = adminLogin();
         int userId = currentUserId(user);
 
         mockMvc.perform(post("/api/v1/admin/users/" + userId + "/block").header("Authorization", "Bearer " + admin))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("BLOCKED"));
 
-        // blocked user can't log in and his old token stops working
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(credentials(email, "password123")))
@@ -96,7 +95,6 @@ class AdminControllerTest extends BaseIntegrationTest {
                 .andExpect(status().isOk());
         login(email, "password123");
 
-        // admin himself can't be blocked
         mockMvc.perform(post("/api/v1/admin/users/" + currentUserId(admin) + "/block")
                         .header("Authorization", "Bearer " + admin))
                 .andExpect(status().isConflict());
@@ -104,8 +102,8 @@ class AdminControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldShowGlobalStats() throws Exception {
-        var user = registerAndLogin(randomEmail());
-        var admin = adminLogin();
+        String user = registerAndLogin(randomEmail());
+        String admin = adminLogin();
         String code = JsonPath.read(createLink(user, "{\"originalUrl\": \"https://example.com\"}"), "$.code");
 
         mockMvc.perform(get("/" + code)).andExpect(status().isFound());
@@ -121,7 +119,7 @@ class AdminControllerTest extends BaseIntegrationTest {
     }
 
     private int currentUserId(String token) throws Exception {
-        var body = mockMvc.perform(get("/api/v1/users/me").header("Authorization", "Bearer " + token))
+        String body = mockMvc.perform(get("/api/v1/users/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         return JsonPath.read(body, "$.id");

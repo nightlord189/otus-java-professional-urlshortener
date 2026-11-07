@@ -14,8 +14,8 @@ class StatsControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldCountClicks() throws Exception {
-        var token = registerAndLogin(randomEmail());
-        var body = createLink(token, "{\"originalUrl\": \"https://example.com\"}");
+        String token = registerAndLogin(randomEmail());
+        String body = createLink(token, "{\"originalUrl\": \"https://example.com\"}");
         String code = JsonPath.read(body, "$.code");
         int linkId = JsonPath.read(body, "$.id");
 
@@ -37,8 +37,8 @@ class StatsControllerTest extends BaseIntegrationTest {
 
     @Test
     void shouldNotShowStatsOfOtherUsersLink() throws Exception {
-        var owner = registerAndLogin(randomEmail());
-        var other = registerAndLogin(randomEmail());
+        String owner = registerAndLogin(randomEmail());
+        String other = registerAndLogin(randomEmail());
         int linkId = JsonPath.read(createLink(owner, "{\"originalUrl\": \"https://example.com\"}"), "$.id");
 
         mockMvc.perform(get("/api/v1/links/" + linkId + "/stats").header("Authorization", "Bearer " + other))
