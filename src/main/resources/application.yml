@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/urlshortener
+    username: urlshortener
+    password: urlshortener
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  cache:
+    caffeine:
+      spec: maximumSize=10000,expireAfterWrite=1h
+
+app:
+  base-url: http://localhost:8080
+  jwt-secret: dev-secret-change-me-in-prod-0123456789
+  jwt-ttl-seconds: 3600
+  admin:
+    email: admin@example.com
+    password: admin123
