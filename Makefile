@@ -6,3 +6,6 @@ run:
 
 test:
 	./gradlew test
+
+api-test:
+	node integration-test/api-test.js
