@@ -6,11 +6,11 @@ Users register, log in and create short links (random code or own alias, optiona
 `GET /{code}` redirects to the original URL and records a click. The owner can see click statistics
 (total, by day, top referers), disable or delete the link. Admin can block links and users and see global stats.
 
-Stack: Java 21, Spring Boot (Web, Data JPA, Security + JWT, Cache), PostgreSQL, Flyway, Caffeine, Testcontainers.
+Stack: Java 21, Spring Boot (Web, Data JPA, Security + JWT, Cache), PostgreSQL, Flyway, Redis, Testcontainers.
 
 ## How to run
 
-Postgres in Docker, app from Gradle:
+Postgres and Redis in Docker, app from Gradle:
 
 ```bash
 make up
@@ -36,7 +36,7 @@ Everything in Docker: `docker compose -f compose.full.yaml up --build`
 
 ## Tests
 
-`make test` - unit and integration tests (Postgres is started by Testcontainers, Docker needed).
+`make test` - unit and integration tests (Postgres and Redis are started by Testcontainers, Docker needed).
 
 `make api-test` - runs the main scenario with curl-like requests against a running app
 (`integration-test/api-test.js`, needs Node 18+).
