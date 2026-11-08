@@ -13,9 +13,6 @@ import org.aburavov.urlshortener.repository.ClickRepository;
 import org.aburavov.urlshortener.service.LinkService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -48,8 +45,9 @@ public class LinkController {
     public Page<LinkResponse> list(
             @AuthenticationPrincipal User user,
             @RequestParam(required = false) LinkStatus status,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return linkService.findByOwner(user.getId(), status, pageable).map(link -> LinkResponse.from(link, baseUrl));
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return linkService.findByOwner(user.getId(), status, page, size).map(link -> LinkResponse.from(link, baseUrl));
     }
 
     @GetMapping("/api/v1/links/{id}")
@@ -76,7 +74,7 @@ public class LinkController {
     @GetMapping("/{code}")
     public void redirect(@PathVariable String code, HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        ResolvedLink link = linkService.resolve(code);
+        ResolvedLink link = linkService.resolve(code.toLowerCase());
         if (!link.isActive()) {
             throw new ResponseStatusException(HttpStatus.GONE, "Link is disabled or expired");
         }

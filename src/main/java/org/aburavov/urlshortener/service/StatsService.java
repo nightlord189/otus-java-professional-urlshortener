@@ -67,10 +67,11 @@ public class StatsService {
 
     public GlobalStatsResponse globalStats() {
         List<TopLinkResponse> topLinks = jdbcTemplate.query(
-                "select c.link_id, l.short_code, count(*) as clicks from clicks c"
+                "select c.link_id, l.short_code, l.original_url, count(*) as clicks from clicks c"
                         + " join links l on l.id = c.link_id"
-                        + " group by c.link_id, l.short_code order by clicks desc limit 10",
-                (rs, i) -> new TopLinkResponse(rs.getLong("link_id"), rs.getString("short_code"), rs.getLong("clicks")));
+                        + " group by c.link_id, l.short_code, l.original_url order by clicks desc limit 10",
+                (rs, i) -> new TopLinkResponse(rs.getLong("link_id"), rs.getString("short_code"),
+                        rs.getString("original_url"), rs.getLong("clicks")));
         return new GlobalStatsResponse(
                 userRepository.count(),
                 linkRepository.countByStatusNot(LinkStatus.DELETED),

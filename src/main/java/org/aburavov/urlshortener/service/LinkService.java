@@ -12,7 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +53,7 @@ public class LinkService {
                 code = codeGenerator.generate();
             }
         } else {
+            code = code.trim().toLowerCase();
             checkAlias(code);
         }
         User owner = userService.getById(ownerId);
@@ -70,14 +72,16 @@ public class LinkService {
         return new ResolvedLink(link.getId(), link.getOriginalUrl(), link.getStatus(), link.getExpiresAt());
     }
 
-    public Page<Link> findByOwner(long ownerId, LinkStatus status, Pageable pageable) {
+    public Page<Link> findByOwner(long ownerId, LinkStatus status, int page, int size) {
+        PageRequest pageable = pageRequest(page, size);
         if (status == null) {
             return linkRepository.findByOwnerIdAndStatusNot(ownerId, LinkStatus.DELETED, pageable);
         }
         return linkRepository.findByOwnerIdAndStatus(ownerId, status, pageable);
     }
 
-    public Page<Link> findAll(Long ownerId, LinkStatus status, Pageable pageable) {
+    public Page<Link> findAll(Long ownerId, LinkStatus status, int page, int size) {
+        PageRequest pageable = pageRequest(page, size);
         if (ownerId != null && status != null) {
             return linkRepository.findByOwnerIdAndStatus(ownerId, status, pageable);
         }
@@ -161,8 +165,15 @@ public class LinkService {
         return link;
     }
 
+    private PageRequest pageRequest(int page, int size) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "page must be >= 0 and size between 1 and 100");
+        }
+        return PageRequest.of(page, size, Sort.by("createdAt").descending());
+    }
+
     private void checkAlias(String alias) {
-        if (!alias.matches("[A-Za-z0-9_-]{4,32}")) {
+        if (!alias.matches("[a-z0-9_-]{4,32}")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Alias must be 4-32 chars: letters, digits, - or _");
         }
         if (linkRepository.existsByShortCode(alias)) {

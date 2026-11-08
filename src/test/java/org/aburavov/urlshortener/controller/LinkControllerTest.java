@@ -48,20 +48,20 @@ class LinkControllerTest extends BaseIntegrationTest {
     @Test
     void shouldCreateLinkWithAlias() throws Exception {
         String token = registerAndLogin(randomEmail());
-        String alias = "page" + System.nanoTime();
+        String alias = "Page" + System.nanoTime();
 
         mockMvc.perform(post("/api/v1/links")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"originalUrl\": \"https://example.com\", \"alias\": \"" + alias + "\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.code").value(alias))
-                .andExpect(jsonPath("$.shortUrl").value("http://localhost:8080/" + alias));
+                .andExpect(jsonPath("$.code").value(alias.toLowerCase()))
+                .andExpect(jsonPath("$.shortUrl").value("http://localhost:8080/" + alias.toLowerCase()));
 
         mockMvc.perform(post("/api/v1/links")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"originalUrl\": \"https://example.org\", \"alias\": \"" + alias + "\"}"))
+                        .content("{\"originalUrl\": \"https://example.org\", \"alias\": \"" + alias.toUpperCase() + "\"}"))
                 .andExpect(status().isConflict());
     }
 
@@ -102,6 +102,9 @@ class LinkControllerTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.page.totalElements").value(2))
                 .andExpect(jsonPath("$.content[0].originalUrl").value("https://example.com/a2"))
                 .andExpect(jsonPath("$.content[1].originalUrl").value("https://example.com/a1"));
+
+        mockMvc.perform(get("/api/v1/links").param("size", "1000").header("Authorization", "Bearer " + serik))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -170,6 +173,9 @@ class LinkControllerTest extends BaseIntegrationTest {
         mockMvc.perform(get("/" + code))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("https://example.com/target?x=1"));
+
+        mockMvc.perform(get("/" + code.toUpperCase()))
+                .andExpect(status().isFound());
     }
 
     @Test

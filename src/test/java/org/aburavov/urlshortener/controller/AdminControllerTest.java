@@ -115,7 +115,8 @@ class AdminControllerTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.totalLinks").value(greaterThanOrEqualTo(1)))
                 .andExpect(jsonPath("$.totalClicks").value(greaterThanOrEqualTo(2)))
                 .andExpect(jsonPath("$.clicksLast24h").value(greaterThanOrEqualTo(2)))
-                .andExpect(jsonPath("$.topLinks[*].code").value(hasItem(code)));
+                .andExpect(jsonPath("$.topLinks[*].code").value(hasItem(code)))
+                .andExpect(jsonPath("$.topLinks[?(@.code == '" + code + "')].originalUrl").value(hasItem("https://example.com")));
     }
 
     private int currentUserId(String token) throws Exception {

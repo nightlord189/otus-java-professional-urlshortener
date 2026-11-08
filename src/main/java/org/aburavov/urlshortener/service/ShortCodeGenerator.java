@@ -6,7 +6,7 @@ import java.util.Random;
 
 @Component
 public class ShortCodeGenerator {
-    private static final String ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    private static final String ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
 
     private final Random random = new Random();
 

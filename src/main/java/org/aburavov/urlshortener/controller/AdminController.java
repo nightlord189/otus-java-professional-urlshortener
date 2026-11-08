@@ -9,9 +9,6 @@ import org.aburavov.urlshortener.service.StatsService;
 import org.aburavov.urlshortener.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -35,8 +32,9 @@ public class AdminController {
     public Page<LinkResponse> getLinks(
             @RequestParam(required = false) Long ownerId,
             @RequestParam(required = false) LinkStatus status,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return linkService.findAll(ownerId, status, pageable).map(link -> LinkResponse.from(link, baseUrl));
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return linkService.findAll(ownerId, status, page, size).map(link -> LinkResponse.from(link, baseUrl));
     }
 
     @GetMapping("/links/{id}")
@@ -55,8 +53,8 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public Page<UserResponse> getUsers(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        return userService.findAll(pageable).map(UserResponse::from);
+    public Page<UserResponse> getUsers(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+        return userService.findAll(page, size).map(UserResponse::from);
     }
 
     @GetMapping("/users/{id}")
